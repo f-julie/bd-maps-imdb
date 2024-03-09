@@ -1,7 +1,6 @@
 package com.amazon.ata.maps;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Stores the relationships between movies and actors, allowing releasing a new movie
@@ -9,6 +8,8 @@ import java.util.Set;
  * unreleasing a movie completely, and querying actors by movie and vice versa.
  */
 public class Imdb {
+    private Map<Movie, Set<Actor>> movieToActors = new HashMap<>();
+    private Map<Actor, Set<Movie>> actorToMovies = new HashMap<>();
 
     /**
      * Adds the new movie to the set of movies that an actor has appeared in.
@@ -20,6 +21,10 @@ public class Imdb {
      */
     public void releaseMovie(Movie movie, Set<Actor> actors) {
         //TODO
+        movieToActors.put(movie, actors);
+        for (Actor actor : actors) {
+            actorToMovies.computeIfAbsent(actor, k -> new HashSet<>()).add(movie);
+        }
     }
 
     /**
@@ -32,7 +37,13 @@ public class Imdb {
      */
     public boolean removeMovie(Movie movie) {
         // TODO: replace
-        return false;
+        Set<Actor> actors = movieToActors.remove(movie);
+        if (actors == null) return false;
+        for (Actor actor : actors) {
+            Set<Movie> movies = actorToMovies.get(actor);
+            movies.remove(movie);
+        }
+        return true;
     }
 
     /**
@@ -47,6 +58,8 @@ public class Imdb {
      */
     public void tagActorInMovie(Movie movie, Actor actor) {
         //TODO
+        movieToActors.computeIfAbsent(movie, k -> new HashSet<>()).add(actor);
+        actorToMovies.computeIfAbsent(actor, k -> new HashSet<>()).add(movie);
     }
 
     /**
@@ -58,7 +71,9 @@ public class Imdb {
      */
     public Set<Actor> getActorsInMovie(Movie movie) {
         // TODO: replace
-        return Collections.EMPTY_SET;
+        Set<Actor> actors = movieToActors.get(movie);
+        if (actors == null) throw new IllegalArgumentException("Movie not found");
+        return actors;
     }
 
     /**
@@ -70,7 +85,7 @@ public class Imdb {
      */
     public Set<Movie> getMoviesForActor(Actor actor) {
         // TODO: replace
-        return Collections.EMPTY_SET;
+        return actorToMovies.getOrDefault(actor, new HashSet<>());
     }
 
     /**
@@ -80,7 +95,7 @@ public class Imdb {
      */
     public Set<Actor> getAllActorsInIMDB() {
         // TODO: replace
-        return Collections.EMPTY_SET;
+        return actorToMovies.keySet();
     }
 
     /**
@@ -94,6 +109,10 @@ public class Imdb {
      */
     public int getTotalNumCredits() {
         // TODO: replace
-        return 0;
+        int total = 0;
+        for (Set<Actor> actors : movieToActors.values()) {
+            total += actors.size();
+        }
+        return total;
     }
 }
